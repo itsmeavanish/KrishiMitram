@@ -14,6 +14,8 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, Leaf, Sun, Moon, User, BarChart3 } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useAuth } from "@/app/context/AuthContext"
+import LogoutButton from "./logoutbutton"
 
 const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -61,6 +63,11 @@ const Navigation = () => {
       description: "Connect with fellow farmers",
     },
   ]
+
+  const { user, loading } = useAuth();
+  console.log("user from nav", user);
+  
+  
 
   return (
     <motion.header
@@ -131,9 +138,14 @@ const Navigation = () => {
               </Button>
             </Link>
 
-            <Link href="/auth/login">
+            {
+              !user&& <Link href="/auth/login">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6">Login</Button>
             </Link>
+            }
+            {
+              user&& <LogoutButton/>
+            }
           </div>
 
           {/* Mobile Navigation */}

@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,36 +9,138 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Eye, EyeOff, Leaf, Phone, Mail, User, MapPin } from "lucide-react"
-import Link from "next/link"
-import axios from "axios"
+import Dropdown from "@/components/ui/dropdown"
+
+// ✅ Define roles as tuple
+const roles = ["farmer", "buyer", "storeowner", "officer"] as const
+type Role = typeof roles[number]
+
+type Field = {
+  name: string
+  label: string
+  required?: boolean
+}
+type FormData = {
+  [key: string]: string | { lat: number; lng: number }; // allow geolocation object
+};
+
+
+const roleFields: Record<Role, Field[]> = {
+  farmer: [
+    { name: "address", label: "Address", required: true },
+    { name: "name", label: "Full Name", required: true },
+    { name: "email", label: "Email" },
+    { name: "phone", label: "Phone" },
+  ],
+  buyer: [
+    { name: "address", label: "Address", required: true },
+    { name: "name", label: "Full Name", required: true },
+    { name: "email", label: "Email" },
+    { name: "phone", label: "Phone" },
+    { name: "company", label: "Company", required: true },
+    { name: "GSTno", label: "GST No" },
+    { name: "PAN", label: "PAN" },
+  ],
+  storeowner: [
+    { name: "address", label: "Address", required: true },
+    { name: "ownerName", label: "Owner Name" },
+    { name: "storeName", label: "Store Name" },
+    { name: "GSTno", label: "GST No" },
+    { name: "storetype", label: "Store Type (equipment/pesticide fertilizer)" },
+    { name: "storesize", label: "Store Size (small/wholeseller/retailer)" },
+    { name: "contact", label: "Contact" },
+  ],
+  officer: [
+    { name: "address", label: "Address", required: true },
+    { name: "name", label: "Full Name", required: true },
+    { name: "email", label: "Email" },
+    { name: "contact", label: "Contact" },
+    { name: "employeeId", label: "Employee ID", required: true },
+    { name: "department", label: "Department" },
+    { name: "post", label: "Post" },
+    { name: "division", label: "Division" },
+  ],
+}
+
 export default function AuthPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+const [showPassword, setShowPassword] = useState(false);
+const [isLoading, setIsLoading] = useState(false);
+const [role, setRole] = useState<Role>("farmer");
+const [formData, setFormData] = useState<FormData>({});
+
+
+useEffect(() => {
+  if (role !== "officer" && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setFormData((prev) => ({
+          ...prev,
+          geolocation: {
+            lat: latitude,
+            lng: longitude,
+          },
+        }));
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+      }
+    );
+  }
+}, [role]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      console.log({ role, formData });
+      
+      const payload = {
+    ...formData
+  };
+
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include"
+  });
       window.location.href = "/dashboard"
-    }, 2000)
+      const data = await response.json()
+      console.log(data);
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response=await axios.post("http://localhost:4000/api/auth/register", {
-        name: "Avanish Upadhyay",
-        email:"avanishupdhyay63@gmail.com",
-        password: "avaish@123",
-      })
+      console.log({ role, formData });
+      
+      const payload = {
+    role,
+    ...formData
+  };
+
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
       window.location.href = "/dashboard"
-      console.log(response.data)
+      console.log(response)
     } catch (error) {
       console.log(error)
     }
   }
+
+
+const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4">
@@ -49,6 +150,7 @@ export default function AuthPage() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md"
       >
+        {/* Header */}
         <div className="text-center mb-8">
           <motion.div
             initial={{ scale: 0 }}
@@ -74,6 +176,7 @@ export default function AuthPage() {
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
 
+              {/* ✅ Login Form */}
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
@@ -83,6 +186,8 @@ export default function AuthPage() {
                       <Input
                         id="email"
                         type="text"
+                        name="email"
+                        onChange={handleChange}
                         placeholder="Enter your email or phone"
                         className="pl-10 h-12 border-slate-200 focus:border-emerald-500"
                         required
@@ -97,6 +202,8 @@ export default function AuthPage() {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
+                        name="password"
+                        onChange={handleChange}
                         className="pr-10 h-12 border-slate-200 focus:border-emerald-500"
                         required
                       />
@@ -108,16 +215,6 @@ export default function AuthPage() {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded border-slate-300" />
-                      <span className="text-slate-600">Remember me</span>
-                    </label>
-                    <Link href="#" className="text-emerald-600 hover:text-emerald-700">
-                      Forgot password?
-                    </Link>
                   </div>
 
                   <Button
@@ -130,59 +227,38 @@ export default function AuthPage() {
                 </form>
               </TabsContent>
 
+              {/* ✅ Register Form */}
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
+                  {/* Role Dropdown */}
+                  <Dropdown options={roles} value={role} onChange={(val: string) => setRole(val as Role)} />
+
+                  {/* Dynamic Fields */}
+                  {roleFields[role].map((field) => (
+                    <div className="space-y-2" key={field.name}>
+                      <Label htmlFor={field.name}>{field.label}</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        {field.name === "name" && <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />}
+                        {field.name === "email" && <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />}
+                        {field.name === "phone" && <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />}
+                        {field.name === "address" && <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />}
+
                         <Input
-                          id="firstName"
-                          placeholder="First name"
-                          className="pl-10 h-12 border-slate-200 focus:border-emerald-500"
-                          required
+                          id={field.name}
+                          type={field.name === "email" ? "email" : "text"}
+                          placeholder={`Enter your ${field.label.toLowerCase()}`}
+                          name={field.name}
+                          onChange={handleChange}
+                          className={`h-12 border-slate-200 focus:border-emerald-500 ${
+                            ["name", "email", "phone", "address"].includes(field.name) ? "pl-10" : ""
+                          }`}
+                          required={field.required || false}
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        placeholder="Last name"
-                        className="h-12 border-slate-200 focus:border-emerald-500"
-                        required
-                      />
-                    </div>
-                  </div>
+                  ))}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="Enter your phone number"
-                        className="pl-10 h-12 border-slate-200 focus:border-emerald-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <Input
-                        id="location"
-                        placeholder="City, State"
-                        className="pl-10 h-12 border-slate-200 focus:border-emerald-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
+                  {/* Password */}
                   <div className="space-y-2">
                     <Label htmlFor="regPassword">Password</Label>
                     <div className="relative">
@@ -190,6 +266,8 @@ export default function AuthPage() {
                         id="regPassword"
                         type={showPassword ? "text" : "password"}
                         placeholder="Create a password"
+                        name="password"
+                        onChange={handleChange}
                         className="pr-10 h-12 border-slate-200 focus:border-emerald-500"
                         required
                       />
@@ -201,20 +279,6 @@ export default function AuthPage() {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                  </div>
-
-                  <div className="flex items-start space-x-2 text-sm">
-                    <input type="checkbox" className="mt-1 rounded border-slate-300" required />
-                    <span className="text-slate-600">
-                      I agree to the{" "}
-                      <Link href="#" className="text-emerald-600 hover:text-emerald-700">
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link href="#" className="text-emerald-600 hover:text-emerald-700">
-                        Privacy Policy
-                      </Link>
-                    </span>
                   </div>
 
                   <Button
@@ -229,15 +293,6 @@ export default function AuthPage() {
             </Tabs>
           </CardContent>
         </Card>
-
-        <div className="text-center mt-6">
-          <p className="text-slate-600 text-sm">
-            Need help?{" "}
-            <Link href="#" className="text-emerald-600 hover:text-emerald-700">
-              Contact Support
-            </Link>
-          </p>
-        </div>
       </motion.div>
     </div>
   )

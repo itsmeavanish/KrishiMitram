@@ -34,7 +34,10 @@ import {
   User,
   Heart,
   Share2,
+  Activity,
+  MessageSquareMore,
 } from "lucide-react"
+import Link from "next/link"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -288,260 +291,105 @@ const MarketplacePage = () => {
               Buy, sell, and rent farming equipment and crops. Connect with farmers and suppliers in your district for
               the best deals.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Dialog open={isAddingItem} onOpenChange={setIsAddingItem}>
-                <DialogTrigger asChild>
-                  <Button className="bg-primary hover:bg-primary/90">
-                    <Plus className="h-4 w-4 mr-2" />
-                    List Your Item
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>List New Item</DialogTitle>
-                    <DialogDescription>Add your equipment or crops to the marketplace</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <Input placeholder="Item title" />
-                    <Textarea placeholder="Item description" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="equipment">Equipment</SelectItem>
-                          <SelectItem value="crops">Crops</SelectItem>
-                          <SelectItem value="seeds">Seeds</SelectItem>
-                          <SelectItem value="fertilizers">Fertilizers</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="sale">For Sale</SelectItem>
-                          <SelectItem value="rent">For Rent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input placeholder="Price (₹)" type="number" />
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {locations.slice(1).map((location) => (
-                            <SelectItem key={location} value={location}>
-                              {location}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Input placeholder="Your phone number" />
-                    <Button className="w-full bg-primary hover:bg-primary/90">List Item</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <Button
-                variant="outline"
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground bg-transparent"
-              >
-                Browse Categories
-              </Button>
-            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Filters Section */}
       <section className="pb-8">
         <div className="container mx-auto px-4">
-          <motion.div ref={filtersRef} className="bg-card/50 backdrop-blur-sm rounded-lg border border-border/50 p-6">
-            <div className="flex flex-col lg:flex-row gap-4 items-center">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search items..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/** Each card wrapper */}
+            <motion.div
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="h-full"
+            >
+              <Link href="/nearbystores" className="h-full">
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                <CardHeader className="pb-3 flex flex-col items-center justify-center">
+                  <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
+                    <ShoppingCart className="h-10 w-10 mb-2" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-semibold">
+                    Nearby Stores
+                  </div>
+                </CardContent>
+              </Card>
+              </Link>
+            </motion.div>
 
-              {/* Category Filter */}
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full lg:w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category === "all" ? "All Categories" : category.charAt(0).toUpperCase() + category.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <motion.div
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="h-full"
+            >
+              <Link href="/rentequip" className="h-full">
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                <CardHeader className="pb-3 flex flex-col items-center justify-center">
+                  <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
+                    <Tractor className="h-10 w-10 mb-2" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-semibold">
+                    Rent Equipments
+                  </div>
+                </CardContent>
+              </Card>
+              </Link>
+            </motion.div>
 
-              {/* Type Filter */}
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger className="w-full lg:w-48">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {types.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type === "all" ? "All Types" : type === "sale" ? "For Sale" : "For Rent"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <motion.div
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="h-full"
+            >
+              <Link href="/sellcrops" className="h-full">
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                <CardHeader className="pb-3 flex flex-col items-center justify-center">
+                  <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
+                    <Wheat className="h-10 w-10 mb-2" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-semibold">
+                    Sell crops
+                  </div>
+                </CardContent>
+              </Card>
+              </Link>
+            </motion.div>
 
-              {/* Location Filter */}
-              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                <SelectTrigger className="w-full lg:w-48">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((location) => (
-                    <SelectItem key={location} value={location}>
-                      {location === "all" ? "All Locations" : location}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <motion.div
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="h-full"
+            >
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                <CardHeader className="pb-3 flex flex-col items-center justify-center">
+                  <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
+                    <MessageSquareMore className="h-10 w-10 mb-2" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-semibold">
+                    Chat
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
 
-              <div className="text-sm text-muted-foreground">{filteredItems.length} items found</div>
-            </div>
-          </motion.div>
         </div>
       </section>
 
-      {/* Featured Items */}
-      {filteredItems.some((item) => item.featured) && (
-        <section className="pb-8">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Featured Items</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems
-                .filter((item) => item.featured)
-                .slice(0, 3)
-                .map((item) => (
-                  <motion.div
-                    key={item.id}
-                    whileHover={{ y: -8, scale: 1.02 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg group relative overflow-hidden">
-                      <div className="absolute top-4 left-4 z-10">
-                        <Badge className="bg-primary text-primary-foreground">Featured</Badge>
-                      </div>
-                      <div className="aspect-video relative overflow-hidden">
-                        <img
-                          src={item.images[0] || "/placeholder.svg"}
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {getCategoryIcon(item.category)}
-                            <Badge variant="outline" className="text-xs">
-                              {item.category}
-                            </Badge>
-                            {item.condition && (
-                              <Badge className={getConditionColor(item.condition)}>{item.condition}</Badge>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-primary">{formatPrice(item.price, item.type)}</div>
-                            <div className="text-xs text-muted-foreground">{item.type === "rent" ? "per day" : ""}</div>
-                          </div>
-                        </div>
-                        <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                          {item.title}
-                        </CardTitle>
-                        <CardDescription className="text-muted-foreground leading-relaxed line-clamp-2">
-                          {item.description}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center text-muted-foreground">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {item.location}
-                          </div>
-                          <div className="flex items-center text-muted-foreground">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {new Date(item.postedDate).toLocaleDateString()}
-                          </div>
-                        </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                          <div className="flex items-center space-x-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium">{item.seller.name}</span>
-                            <div className="flex items-center">
-                              <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                              <span className="text-xs text-muted-foreground ml-1">{item.seller.rating}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                              <Heart className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                              <Share2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
 
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-primary hover:bg-primary/90"
-                            onClick={() => setSelectedItem(item)}
-                          >
-                            <MessageCircle className="h-3 w-3 mr-1" />
-                            Contact
-                          </Button>
-                          <Button size="sm" variant="outline" className="flex-1 bg-transparent">
-                            <Phone className="h-3 w-3 mr-1" />
-                            Call
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-            </div>
-          </div>
-        </section>
-      )}
+
 
       {/* All Items Grid */}
       <section className="pb-20">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-foreground">All Items</h2>
-            <Select defaultValue="newest">
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="rating">Highest Rated</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div ref={itemsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
