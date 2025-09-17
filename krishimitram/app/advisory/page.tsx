@@ -79,7 +79,11 @@ const AdvisoryPage = () => {
   const headerRef = useRef<HTMLDivElement>(null)
   const chatRef = useRef<HTMLDivElement>(null)
   const advisoriesRef = useRef<HTMLDivElement>(null)
+  const chatEndRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+  chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
+}, [chatMessages])
   // Mock data
   useEffect(() => {
     const mockAdvisories: Advisory[] = [
@@ -218,32 +222,55 @@ const AdvisoryPage = () => {
     return () => ctx.revert()
   }, [])
 
-  const handleSendMessage = async () => {
-    if (!currentMessage.trim()) return
+const handleSendMessage = async () => {
+  if (!currentMessage.trim()) return
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: "user",
-      content: currentMessage,
+  const userMessage: ChatMessage = {
+    id: Date.now().toString(),
+    type: "user",
+    content: currentMessage,
+    timestamp: new Date(),
+  }
+
+  setChatMessages((prev) => [...prev, userMessage])
+  setCurrentMessage("")
+  setIsTyping(true)
+
+  try {
+    const res = await fetch("http://localhost:3001/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: userMessage.content }),
+    })
+
+    const data = await res.json()
+    console.log("AI Response:", data)
+    const aiResponse: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      type: "ai",
+      content: data.response.answer, // your FastAPI backend should return { "reply": "..." }
       timestamp: new Date(),
     }
 
-    setChatMessages((prev) => [...prev, userMessage])
-    setCurrentMessage("")
-    setIsTyping(true)
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
+    setChatMessages((prev) => [...prev, aiResponse])
+  } catch (err) {
+    console.error("Chat API error:", err)
+    setChatMessages((prev) => [
+      ...prev,
+      {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content: getAIResponse(currentMessage),
+        content: "⚠️ Unable to connect to the AI server. Please try again later.",
         timestamp: new Date(),
-      }
-      setChatMessages((prev) => [...prev, aiResponse])
-      setIsTyping(false)
-    }, 2000)
+      },
+    ])
+  } finally {
+    setIsTyping(false)
   }
+}
+
 
   const getAIResponse = (message: string): string => {
     const lowerMessage = message.toLowerCase()
@@ -367,58 +394,63 @@ const AdvisoryPage = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col">
-                      {/* Messages */}
-                      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-                        {chatMessages.map((message) => (
-                          <div
-                            key={message.id}
-                            className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
-                          >
-                            <div
-                              className={`max-w-[80%] p-3 rounded-lg ${
-                                message.type === "user"
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              <p className="text-sm">{message.content}</p>
-                              <p className="text-xs opacity-70 mt-1">{message.timestamp.toLocaleTimeString()}</p>
-                            </div>
-                          </div>
-                        ))}
-                        {isTyping && (
-                          <div className="flex justify-start">
-                            <div className="bg-muted text-muted-foreground p-3 rounded-lg">
-                              <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                                <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-100"></div>
-                                <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-200"></div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+  {/* Messages */}
+  <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+    {chatMessages.map((message) => (
+      <div
+        key={message.id}
+        className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
+      >
+        <div
+          className={`max-w-[80%] p-3 rounded-lg ${
+            message.type === "user"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          <p className="text-sm">{message.content}</p>
+          <p className="text-xs opacity-70 mt-1">
+            {message.timestamp.toLocaleTimeString()}
+          </p>
+        </div>
+      </div>
+    ))}
+    {isTyping && (
+      <div className="flex justify-start">
+        <div className="bg-muted text-muted-foreground p-3 rounded-lg">
+          <div className="flex space-x-1">
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-100"></div>
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-200"></div>
+          </div>
+        </div>
+      </div>
+    )}
+    {/* Dummy div to scroll into view */}
+    <div ref={chatEndRef} />
+  </div>
 
-                      {/* Input */}
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="icon">
-                          <Camera className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="icon">
-                          <Mic className="h-4 w-4" />
-                        </Button>
-                        <Input
-                          placeholder="Ask about crops, diseases, weather..."
-                          value={currentMessage}
-                          onChange={(e) => setCurrentMessage(e.target.value)}
-                          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                          className="flex-1"
-                        />
-                        <Button onClick={handleSendMessage} className="bg-primary hover:bg-primary/90">
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
+  {/* Input */}
+  <div className="flex items-center space-x-2">
+    <Button variant="outline" size="icon">
+      <Camera className="h-4 w-4" />
+    </Button>
+    <Button variant="outline" size="icon">
+      <Mic className="h-4 w-4" />
+    </Button>
+    <Input
+      placeholder="Ask about crops, diseases, weather..."
+      value={currentMessage}
+      onChange={(e) => setCurrentMessage(e.target.value)}
+      onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+      className="flex-1"
+    />
+    <Button onClick={handleSendMessage} className="bg-primary hover:bg-primary/90">
+      <Send className="h-4 w-4" />
+    </Button>
+  </div>
+</CardContent>
+
                   </Card>
                 </div>
 

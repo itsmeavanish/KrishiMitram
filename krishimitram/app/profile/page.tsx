@@ -69,7 +69,7 @@ export default function ProfilePage() {
                     </button>
                   </div>
 
-                  <h2 className="text-xl font-semibold text-slate-800 mb-1">Rajesh Kumar</h2>
+                  <h2 className="text-xl font-semibold text-slate-800 mb-1">Avanish Upadhyay</h2>
                   <p className="text-slate-600 mb-2">Organic Farmer</p>
                   <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200">
                     <Leaf className="w-3 h-3 mr-1" />
@@ -79,15 +79,15 @@ export default function ProfilePage() {
                   <div className="mt-6 space-y-3 text-sm">
                     <div className="flex items-center text-slate-600">
                       <MapPin className="w-4 h-4 mr-2" />
-                      Pune, Maharashtra
+                      Lucknow, Uttar Pradesh
                     </div>
                     <div className="flex items-center text-slate-600">
                       <Calendar className="w-4 h-4 mr-2" />
-                      Member since 2023
+                      Member since 2025
                     </div>
                     <div className="flex items-center text-slate-600">
                       <Award className="w-4 h-4 mr-2" />
-                      15 years experience
+                      1 years experience
                     </div>
                   </div>
                 </div>
