@@ -48,6 +48,8 @@ import {
   TrendingUp,
   Activity,
   AlertTriangle,
+  User,
+  MapPin,
 } from "lucide-react"
 
 gsap.registerPlugin(ScrollTrigger)
@@ -62,17 +64,32 @@ interface ActivityLog {
   duration: number
 }
 
-interface WeatherData {
-  temperature: number
-  humidity: number
-  windSpeed: number
-  condition: string
-  forecast: Array<{
-    day: string
-    temp: number
-    condition: string
-  }>
+interface WeatherAlert {
+  event: string;        // e.g., "Heavy Rainfall", "Thunderstorm"
+  description: string;  // full details of the alert
+  severity: string;     // e.g., "moderate", "severe", "extreme"
+  start: string | null; // local start time of the alert
+  end: string | null;   // local end time of the alert
 }
+
+interface WeatherData {
+  current: {
+    day: string;
+    temperature: number;
+    humidity: number;
+    windSpeed: number;
+    condition: string;
+    location: string;
+  };
+  forecast: Array<{
+    day: string;
+    temperature: number;
+    condition: string;
+  }>;
+  alerts: WeatherAlert[]; // array of weather alerts
+}
+
+
 
 interface CropProgress {
   crop: string
@@ -85,6 +102,130 @@ interface CropProgress {
 const DashboardPage = () => {
   const [activities, setActivities] = useState<ActivityLog[]>([])
   const [isAddingActivity, setIsAddingActivity] = useState(false)
+  const [coords, setCoords] = useState({ lat: null, lng: null });
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+
+
+  // 🔥 Fetch + transform weather data
+  async function fetchWeather(lat: number, lng: number) {
+    // 1. Fetch current weather from Ambee
+    const res = await fetch(`/api/weather?lat=${lat}&lng=${lng}`);
+    if (!res.ok) throw new Error("Failed to fetch weather");
+
+    const json = await res.json();
+    const data = json.data;
+
+    // Convert values from Ambee
+    const tempCelsius = ((data.temperature - 32) * 5) / 9; // °F → °C
+    const windKmh = data.windSpeed * 1.60934; // mph → km/h
+
+    // Days of week
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const todayIndex = new Date().getDay();
+    const locationRes = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
+    const locationData = await locationRes.json();
+    const locationName = locationData.address?.city
+      || locationData.address?.town
+      || locationData.address?.village
+      || locationData.address?.state
+      || "Unknown Location";
+    // Current weather (from Ambee)
+    const current = {
+      day: days[todayIndex],
+      temperature: Number(tempCelsius.toFixed(1)),
+      condition: data.summary || "Unknown",
+      humidity: data.humidity,
+      windSpeed: Number(windKmh.toFixed(1)),
+      location: locationName,
+    };
+
+
+
+    // 2. Fetch forecast + alerts from Open-Meteo
+    const forecastRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&alerts=true`
+    );
+    if (!forecastRes.ok) throw new Error("Failed to fetch forecast");
+
+    const forecastJson = await forecastRes.json();
+
+    // 3. Build forecast array (next 5 days)
+    const forecast = forecastJson.daily.time.slice(1, 6).map((date: string, i: number) => {
+      const idx = (todayIndex + i + 1) % 7;
+      return {
+        day: days[idx],
+        temperature: Number(forecastJson.daily.temperature_2m_max[i + 1].toFixed(1)),
+        condition: mapWeatherCode(forecastJson.daily.weathercode[i + 1]),
+      };
+    });
+
+    // 4. Extract alerts (if present)
+    const alerts = (forecastJson.alerts?.map((a: any) => ({
+      event: a.event,                       // e.g. "Heavy Rainfall"
+      description: a.description || "No details",
+      severity: a.severity || "moderate",
+      start: a.onset ? new Date(a.onset).toLocaleString() : null,
+      end: a.expires ? new Date(a.expires).toLocaleString() : null,
+    }))) || [];
+
+
+    return { current, forecast, alerts };
+  }
+
+  // Helper: map Open-Meteo weather codes to human-readable text
+  function mapWeatherCode(code: number): string {
+    const mapping: Record<number, string> = {
+      0: "Clear sky",
+      1: "Mainly clear",
+      2: "Partly cloudy",
+      3: "Overcast",
+      45: "Fog",
+      48: "Depositing rime fog",
+      51: "Light drizzle",
+      53: "Moderate drizzle",
+      55: "Dense drizzle",
+      61: "Slight rain",
+      63: "Moderate rain",
+      65: "Heavy rain",
+      71: "Slight snow fall",
+      73: "Moderate snow fall",
+      75: "Heavy snow fall",
+      95: "Thunderstorm",
+    };
+    return mapping[code] || "Unknown";
+  }
+
+
+
+
+  // ---------------------------------------------------------
+
+  // Run once when component mounts
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCoords({ lat: latitude, lng: longitude });
+
+          // Fetch weather API after getting location
+          fetchWeather(latitude, longitude).then((data) => {
+            setWeatherData(data);
+            console.log("✅ Final Weather Data:", data);
+
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    } else {
+      console.log("Your location is not available, please change your settings to allow");
+    }
+  }, []);
+
   const [newActivity, setNewActivity] = useState({
     activity: "",
     crop: "",
@@ -95,21 +236,6 @@ const DashboardPage = () => {
   const headerRef = useRef<HTMLDivElement>(null)
   const statsRef = useRef<HTMLDivElement>(null)
   const chartsRef = useRef<HTMLDivElement>(null)
-
-  // Mock data
-  const weatherData: WeatherData = {
-    temperature: 28,
-    humidity: 65,
-    windSpeed: 12,
-    condition: "partly-cloudy",
-    forecast: [
-      { day: "Today", temp: 28, condition: "partly-cloudy" },
-      { day: "Tomorrow", temp: 30, condition: "sunny" },
-      { day: "Wed", temp: 26, condition: "rainy" },
-      { day: "Thu", temp: 29, condition: "sunny" },
-      { day: "Fri", temp: 27, condition: "cloudy" },
-    ],
-  }
 
   const cropProgress: CropProgress[] = [
     {
@@ -294,6 +420,7 @@ const DashboardPage = () => {
     }
   }
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card/20 to-secondary/10">
       <Navigation />
@@ -368,66 +495,110 @@ const DashboardPage = () => {
       <section className="pb-8">
         <div className="container mx-auto px-4">
           <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <motion.div whileHover={{ scale: 1.02, y: -4 }}>
-              <Card className="border-border/50 hover:border-primary/30 transition-all duration-300">
+            {/** Each card wrapper */}
+            <motion.div
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="h-full"
+            >
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Today's Activities</CardTitle>
+                    <div className="flex items-center space-x-2">
+                      <User className="h-5 w-5" />
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        {"Rajesh Kumar"}
+                      </CardTitle>
+                    </div>
                     <Activity className="h-4 w-4 text-primary" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">8</div>
-                  <p className="text-xs text-muted-foreground">+2 from yesterday</p>
+
+                <CardContent className="space-y-2 flex-1 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {getWeatherIcon(weatherData?.forecast[0].condition || "Unknown")}
+                      <div>
+                        <div className="text-xl font-bold text-foreground">
+                          {weatherData?.current?.temperature}°C
+                        </div>
+                        <div className="text-xs text-muted-foreground capitalize">
+                          {weatherData?.current?.condition.split(".")[0]}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-1 mt-3">
+                    <MapPin />
+                    <p className="text-xs text-muted-foreground">
+                      Location: {weatherData?.current?.location || "N/A"}
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.02, y: -4 }}>
-              <Card className="border-border/50 hover:border-primary/30 transition-all duration-300">
+            {/** Repeat motion.div for other cards with same classes */}
+            <motion.div whileHover={{ scale: 1.02, y: -4 }} className="h-full">
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Hours Worked</CardTitle>
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Activities</CardTitle>
                     <TrendingUp className="h-4 w-4 text-primary" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">42</div>
-                  <p className="text-xs text-muted-foreground">This week</p>
+                <CardContent className="flex-1 flex flex-col justify-center">
+                  <div className="text-2xl font-bold text-foreground">Total 3</div>
+                  <p className="text-xs text-muted-foreground">2 of 3 is completed</p>
                 </CardContent>
               </Card>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.02, y: -4 }}>
-              <Card className="border-border/50 hover:border-primary/30 transition-all duration-300">
+            <motion.div whileHover={{ scale: 1.02, y: -4 }} className="h-full">
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium text-muted-foreground">Active Crops</CardTitle>
                     <Sprout className="h-4 w-4 text-primary" />
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1 flex flex-col justify-center">
                   <div className="text-2xl font-bold text-foreground">3</div>
                   <p className="text-xs text-muted-foreground">2 ready for harvest</p>
                 </CardContent>
               </Card>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.02, y: -4 }}>
-              <Card className="border-border/50 hover:border-primary/30 transition-all duration-300">
+            <motion.div whileHover={{ scale: 1.02, y: -4 }} className="h-full">
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium text-muted-foreground">Weather Alert</CardTitle>
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">Rain</div>
-                  <p className="text-xs text-muted-foreground">Expected Wednesday</p>
+                <CardContent className="space-y-4 flex-1 overflow-y-auto">
+                  {weatherData?.alerts && weatherData?.alerts.length > 0 ? (
+                    weatherData?.alerts.map((a, index) => (
+                      <div key={index} className="p-3 rounded-lg bg-red-100 border border-red-300">
+                        <div className="text-lg font-bold text-red-700">{a.event}</div>
+                        <p className="text-sm text-muted-foreground mb-1">{a.description}</p>
+                        <div className="text-xs text-red-600">
+                          Severity: <span className="font-semibold">{a.severity}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Start: {a.start || "N/A"} | End: {a.end || "N/A"}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No weather alerts</div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
           </div>
+
         </div>
       </section>
 
@@ -610,11 +781,11 @@ const DashboardPage = () => {
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        {getWeatherIcon(weatherData.condition)}
+                        {getWeatherIcon(weatherData?.current?.condition || "Unknown")}
                         <div>
-                          <div className="text-3xl font-bold text-foreground">{weatherData.temperature}°C</div>
+                          <div className="text-3xl font-bold text-foreground">{weatherData?.current?.temperature}°C</div>
                           <div className="text-sm text-muted-foreground capitalize">
-                            {weatherData.condition.replace("-", " ")}
+                            {weatherData?.current?.condition}
                           </div>
                         </div>
                       </div>
@@ -622,17 +793,17 @@ const DashboardPage = () => {
                     <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border/50">
                       <div className="text-center">
                         <Droplets className="h-5 w-5 text-blue-500 mx-auto mb-1" />
-                        <div className="text-sm font-medium">{weatherData.humidity}%</div>
+                        <div className="text-sm font-medium">{weatherData?.current?.humidity}%</div>
                         <div className="text-xs text-muted-foreground">Humidity</div>
                       </div>
                       <div className="text-center">
                         <Wind className="h-5 w-5 text-gray-500 mx-auto mb-1" />
-                        <div className="text-sm font-medium">{weatherData.windSpeed} km/h</div>
+                        <div className="text-sm font-medium">{weatherData?.current?.windSpeed} km/h</div>
                         <div className="text-xs text-muted-foreground">Wind</div>
                       </div>
                       <div className="text-center">
                         <Thermometer className="h-5 w-5 text-red-500 mx-auto mb-1" />
-                        <div className="text-sm font-medium">{weatherData.temperature}°C</div>
+                        <div className="text-sm font-medium">{weatherData?.current?.temperature}°C</div>
                         <div className="text-xs text-muted-foreground">Temp</div>
                       </div>
                     </div>
@@ -647,16 +818,16 @@ const DashboardPage = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {weatherData.forecast.map((day, index) => (
+                      {weatherData?.forecast.map((day, index) => (
                         <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                           <div className="flex items-center space-x-3">
-                            {getWeatherIcon(day.condition)}
-                            <span className="font-medium">{day.day}</span>
+                            {getWeatherIcon(day?.condition)}
+                            <span className="font-medium">{day?.day}</span>
                           </div>
                           <div className="text-right">
-                            <div className="font-semibold">{day.temp}°C</div>
+                            <div className="font-semibold">{day?.temperature}°C</div>
                             <div className="text-xs text-muted-foreground capitalize">
-                              {day.condition.replace("-", " ")}
+                              {day?.condition}
                             </div>
                           </div>
                         </div>
