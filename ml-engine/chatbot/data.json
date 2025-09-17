@@ -1,0 +1,50 @@
+[
+  {
+    "crop": "Wheat",
+    "disease": "Rust (Puccinia triticina)",
+    "symptoms": "Yellow to orange pustules on leaves, reduced grain yield.",
+    "pesticide": "Propiconazole (Tilt) or Mancozeb"
+  },
+  {
+    "crop": "Rice",
+    "disease": "Blast (Magnaporthe oryzae)",
+    "symptoms": "Diamond-shaped lesions on leaves, neck rot, poor grain filling.",
+    "pesticide": "Tricyclazole or Isoprothiolane"
+  },
+  {
+    "crop": "Maize",
+    "disease": "Turcicum Leaf Blight (Exserohilum turcicum)",
+    "symptoms": "Large cigar-shaped lesions on leaves, premature drying.",
+    "pesticide": "Mancozeb or Carbendazim"
+  },
+  {
+    "crop": "Potato",
+    "disease": "Late Blight (Phytophthora infestans)",
+    "symptoms": "Water-soaked lesions on leaves, tuber rot.",
+    "pesticide": "Metalaxyl + Mancozeb mixture"
+  },
+  {
+    "crop": "Cotton",
+    "disease": "Bacterial Blight (Xanthomonas campestris)",
+    "symptoms": "Angular leaf spots, boll rot.",
+    "pesticide": "Copper oxychloride or Streptocycline (antibiotic + fungicide mixture)"
+  },
+  {
+    "crop": "Tomato",
+    "disease": "Early Blight (Alternaria solani)",
+    "symptoms": "Concentric ring spots on leaves and stems, fruit rot.",
+    "pesticide": "Chlorothalonil or Copper oxychloride"
+  },
+  {
+    "crop": "Sugarcane",
+    "disease": "Red Rot (Colletotrichum falcatum)",
+    "symptoms": "Red-colored patches inside cane, foul odor.",
+    "pesticide": "No effective fungicide; resistant varieties recommended"
+  },
+  {
+    "crop": "Banana",
+    "disease": "Panama Wilt (Fusarium oxysporum f.sp. cubense)",
+    "symptoms": "Yellowing and wilting of leaves, vascular discoloration.",
+    "pesticide": "Carbendazim soil drench, resistant varieties"
+  }
+]
