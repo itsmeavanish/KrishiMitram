@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import jwt_decode from "jwt-decode"
+import { jwtDecode } from "jwt-decode";
+
 type User = {
   id: string;
   role: string;
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (res.ok) {
           const data = await res.json();
-          const decoded: User = jwt_decode(data.token);
+          const decoded: User = jwtDecode(data.token);
           setUser(decoded);
           console.log("Decoded user:", decoded);
         } else {

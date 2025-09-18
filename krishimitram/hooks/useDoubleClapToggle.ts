@@ -38,7 +38,7 @@ export function useDoubleClapToggle() {
           const spread = freqData.filter((v) => v > BIN_THRESHOLD).length / bufferLength
 
           // Short-time peak detection (instantaneous)
-          const ENERGY_THRESHOLD = 0.22
+          const ENERGY_THRESHOLD = 0.2
           const SPREAD_THRESHOLD = 0.4
 
           if (normalizedEnergy > ENERGY_THRESHOLD && spread > SPREAD_THRESHOLD) {

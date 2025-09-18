@@ -28,8 +28,6 @@ import {
   FileText,
   Video,
   Download,
-  Sprout,
-  CheckCircle,
 } from "lucide-react"
 
 gsap.registerPlugin(ScrollTrigger)
@@ -77,9 +75,7 @@ const AdvisoryPage = () => {
   const [tutorials, setTutorials] = useState<Tutorial[]>([])
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedCrop, setSelectedCrop] = useState("all")
-  const [diseaseFile, setDiseaseFile] = useState<File | null>(null);
-const [diseaseResult, setDiseaseResult] = useState<any>(null);
-const [isPredicting, setIsPredicting] = useState(false);
+
   const headerRef = useRef<HTMLDivElement>(null)
   const chatRef = useRef<HTMLDivElement>(null)
   const advisoriesRef = useRef<HTMLDivElement>(null)
@@ -241,75 +237,32 @@ const handleSendMessage = async () => {
   setIsTyping(true)
 
   try {
-    const contentLower = userMessage.content.toLowerCase()
-    let finalText: string = ""
+    const res = await fetch("http://localhost:3001/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: userMessage.content }),
+    })
 
-    if (contentLower.startsWith("recommend")) {
-      // --- Step 1: Get recommendation from :8000 ---
-      const [_, crop, , district] = userMessage.content.split(" ")
-      const res = await fetch(
-        `http://127.0.0.1:8000/recommend?district=${district}&crop=${crop}`,
-      )
-      const data = await res.json()
-      const backendText = `Recommendation for ${data.crop} in ${data.district}: ${data.recommendation}`
-
-      // --- Step 2: Improve with chatbot on :8001 ---
-      const aiRes = await fetch("http://127.0.0.1:8001/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: backendText }),
-      })
-      const aiData = await aiRes.json()
-      finalText = aiData?.response?.answer || backendText
-
-    } else if (contentLower.startsWith("best crop")) {
-      // --- Step 1: Get best crop from :8000 ---
-      const district = userMessage.content.split("in")[1].trim()
-      const res = await fetch(
-        `http://127.0.0.1:8000/best_crop?district=${district}`,
-      )
-      const data = await res.json()
-      const backendText = `Best crop for ${data.district}: ${data.best_crop}`
-
-      // --- Step 2: Improve with chatbot on :8001 ---
-      const aiRes = await fetch("http://127.0.0.1:8001/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: backendText }),
-      })
-      const aiData = await aiRes.json()
-      finalText = aiData?.response?.answer || backendText
-
-    } else {
-      // --- Directly send user query to chatbot on :8001 ---
-      const aiRes = await fetch("http://localhost:8001/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage.content }),
-      })
-      const aiData = await aiRes.json()
-      console.log("AI Data", aiData)
-      finalText = aiData?.response?.answer || "⚠️ Could not get a response from chatbot."
+    const data = await res.json()
+    console.log("AI Response:", data)
+    const aiResponse: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      type: "ai",
+      content: data.response.answer, // your FastAPI backend should return { "reply": "..." }
+      timestamp: new Date(),
     }
 
-    // --- Push AI response ---
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content: finalText,
-        timestamp: new Date(),
-      },
-    ])
+    setChatMessages((prev) => [...prev, aiResponse])
   } catch (err) {
-    console.error("Error calling API:", err)
+    console.error("Chat API error:", err)
     setChatMessages((prev) => [
       ...prev,
       {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content: "⚠️ Error contacting backend/chatbot. Please try again.",
+        content: "⚠️ Unable to connect to the AI server. Please try again later.",
         timestamp: new Date(),
       },
     ])
@@ -317,6 +270,7 @@ const handleSendMessage = async () => {
     setIsTyping(false)
   }
 }
+
 
   const getAIResponse = (message: string): string => {
     const lowerMessage = message.toLowerCase()
@@ -381,28 +335,6 @@ const handleSendMessage = async () => {
     return matchesCategory && matchesCrop
   })
 
-  const handleDiseasePrediction = async () => {
-  if (!diseaseFile) return;
-  setIsPredicting(true);
-  const formData = new FormData();
-  formData.append("crop", "rice"); // you can make this dynamic with a Select later
-  formData.append("file", diseaseFile);
-
-  try {
-    const res = await fetch("http://127.0.0.1:8002/predict", {
-      method: "POST",
-      body: formData,
-    });
-    const data = await res.json();
-    setDiseaseResult(data);
-  } catch (err) {
-    console.error("Error predicting disease:", err);
-    setDiseaseResult({ error: "Failed to predict disease." });
-  } finally {
-    setIsPredicting(false);
-  }
-};
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card/20 to-secondary/10">
       <Navigation />
@@ -426,9 +358,8 @@ const handleSendMessage = async () => {
       <section className="pb-20">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="ai-chat" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="ai-chat">AI Assistant</TabsTrigger>
-              <TabsTrigger value="disease-detector">Disease Detector</TabsTrigger>
               <TabsTrigger value="advisories">Advisories</TabsTrigger>
               <TabsTrigger value="tutorials">Tutorials</TabsTrigger>
             </TabsList>
@@ -464,54 +395,40 @@ const handleSendMessage = async () => {
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col">
   {/* Messages */}
-  {/* Messages */}
-<div className="flex-1 overflow-y-auto space-y-4 mb-4">
-  {chatMessages.map((message) => (
-    <div
-      key={message.id}
-      className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
-    >
+  <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+    {chatMessages.map((message) => (
       <div
-        className={`max-w-[80%] p-3 rounded-lg ${
-          message.type === "user"
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground"
-        }`}
+        key={message.id}
+        className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
       >
-        {message.type === "ai" ? (
-  <ul className="list-disc list-inside text-sm space-y-1">
-    {message.content
-      .split("*")
-      .map((line) => line.trim())
-      .filter((line) => line)
-      .map((line, index) => (
-        <li key={index}>{line}</li>
-      ))}
-  </ul>
-) : (
-  <p className="text-sm">{message.content}</p>
-)}
-
-        <p className="text-xs opacity-70 mt-1">
-          {message.timestamp.toLocaleTimeString()}
-        </p>
-      </div>
-    </div>
-  ))}
-  {isTyping && (
-    <div className="flex justify-start">
-      <div className="bg-muted text-muted-foreground p-3 rounded-lg">
-        <div className="flex space-x-1">
-          <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-          <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-100"></div>
-          <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-200"></div>
+        <div
+          className={`max-w-[80%] p-3 rounded-lg ${
+            message.type === "user"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          <p className="text-sm">{message.content}</p>
+          <p className="text-xs opacity-70 mt-1">
+            {message.timestamp.toLocaleTimeString()}
+          </p>
         </div>
       </div>
-    </div>
-  )}
-  <div ref={chatEndRef} />
-</div>
-
+    ))}
+    {isTyping && (
+      <div className="flex justify-start">
+        <div className="bg-muted text-muted-foreground p-3 rounded-lg">
+          <div className="flex space-x-1">
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-100"></div>
+            <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-200"></div>
+          </div>
+        </div>
+      </div>
+    )}
+    {/* Dummy div to scroll into view */}
+    <div ref={chatEndRef} />
+  </div>
 
   {/* Input */}
   <div className="flex items-center space-x-2">
@@ -576,22 +493,6 @@ const handleSendMessage = async () => {
                         <Droplets className="h-4 w-4 mr-2" />
                         Nutrition Advice
                       </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start bg-transparent"
-                        onClick={() => setCurrentMessage("Recommend Rice in Thrissur")}
-                      >
-                        <Sprout className="h-4 w-4 mr-2" />
-                        Recommendation for Crops
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start bg-transparent"
-                        onClick={() => setCurrentMessage("Best crop in Thrissur")}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Best Crop Suggestion
-                      </Button>
                     </CardContent>
                   </Card>
 
@@ -625,43 +526,6 @@ const handleSendMessage = async () => {
                 </div>
               </div>
             </TabsContent>
-            {/* Disease Detector Tab */}
-            
-
-<TabsContent value="disease-detector" className="space-y-6">
-  <div className="max-w-lg mx-auto space-y-4">
-    <h2 className="text-2xl font-bold text-foreground text-center">Crop Disease Detector</h2>
-
-    <Input
-      type="file"
-      accept="image/*"
-      onChange={(e) => setDiseaseFile(e.target.files?.[0] || null)}
-    />
-
-    <Button
-      onClick={handleDiseasePrediction}
-      disabled={!diseaseFile || isPredicting}
-      className="w-full bg-primary hover:bg-primary/90"
-    >
-      {isPredicting ? "Predicting..." : "Predict Disease"}
-    </Button>
-
-    {diseaseResult && (
-      <Card className="p-4 border border-border/50">
-        {diseaseResult.error ? (
-          <p className="text-red-500">{diseaseResult.error}</p>
-        ) : (
-          <>
-            <p><strong>Crop:</strong> {diseaseResult.crop}</p>
-            <p><strong>Model Used:</strong> {diseaseResult.model_used}</p>
-            <p><strong>Predicted Disease:</strong> {diseaseResult.predicted_disease}</p>
-            <p><strong>Confidence:</strong> {(diseaseResult.confidence * 100).toFixed(2)}%</p>
-          </>
-        )}
-      </Card>
-    )}
-  </div>
-</TabsContent>
 
             {/* Advisories Tab */}
             <TabsContent value="advisories" className="space-y-6">
