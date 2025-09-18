@@ -31,21 +31,21 @@ app.use('/api/auth', authRoutes);
 app.use("/api/qna", qnaRoutes);
 app.use("/api/users", userRoutes);
 
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.join(__dirname, '../krishimitram/.next'); // Path to frontend build
-  app.use(express.static(frontendPath));
+// // Serve frontend in production
+// if (process.env.NODE_ENV === 'production') {
+//   const frontendPath = path.join(__dirname, '../krishimitram/.next'); // Path to frontend build
+//   app.use(express.static(frontendPath));
 
-  // All other requests send index.html
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
-  });
-}
+//   // All other requests send index.html
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.join(frontendPath, 'index.html'));
+//   });
+// }
 
 // Health check
-app.get('/health', (req, res) => {
-  res.send('Server is running...');
-});
+// app.get('/health', (req, res) => {
+//   res.send('Server is running...');
+// });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
