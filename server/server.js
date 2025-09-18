@@ -17,7 +17,7 @@ const app = express();
 // Middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: "http://localhost:3000", // Change this in production if needed
+  origin: ["http://localhost:3000", "https://krishi-mitram.vercel.app"], // Change this in production if needed
   credentials: true,
 }));
 app.use(express.json());

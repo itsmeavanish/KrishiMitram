@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { gsap } from "gsap"
+
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import Navigation from "@/components/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
