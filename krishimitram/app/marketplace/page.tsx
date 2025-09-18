@@ -38,7 +38,10 @@ import {
   MessageSquareMore,
 } from "lucide-react"
 import Link from "next/link"
-import UserMap from "@/components/UserMap"
+import dynamic from "next/dynamic"
+const UserMap = dynamic(() => import("@/components/UserMap"), {
+  ssr: false,
+});
 
 gsap.registerPlugin(ScrollTrigger)
 

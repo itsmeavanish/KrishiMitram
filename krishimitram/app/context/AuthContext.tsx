@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const res = await fetch("/api/auth/me", {
+        const res = await fetch("https://krishimitram-server.onrender.com/api/auth/me", {
           method: "GET",
           credentials: "include", // ✅ send cookies
         });
