@@ -68,7 +68,7 @@ const EquipmentForm: React.FC = () => {
     try {
       setLoading(true)
 
-      const res = await fetch("http://localhost:5000/api/equipment/register", {
+      const res = await fetch("https://krishimitram-server.onrender.com/api/equipment/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

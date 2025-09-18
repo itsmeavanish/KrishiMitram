@@ -58,7 +58,7 @@ interface Qna {
   answers: Answer[]
 }
 
-const API_BASE = "http://localhost:5000/api/qna" // <<— change to your backend URL
+const API_BASE = "https://krishimitram-server.onrender.com/api/qna" // <<— change to your backend URL
 const LOGGED_IN_USER_ID = "USER_ID_HERE" // <<— replace with actual logged-in user id
 
 const CommunityPage = () => {

@@ -59,7 +59,7 @@ const SearchBuyersPage: React.FC = () => {
 
         try {
             setLoading(true);
-            const res = await fetch("http://localhost:5000/api/buyers/search", {
+            const res = await fetch("https://krishimitram-server.onrender.com/api/buyers/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ cropName, geolocation: userLocation }),

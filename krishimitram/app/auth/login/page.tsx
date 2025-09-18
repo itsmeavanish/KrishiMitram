@@ -105,7 +105,7 @@ export default function AuthPage() {
       const payload = { ...formData };
 
       // 1️⃣ Call login API
-      const loginRes = await fetch("http://localhost:5000/api/auth/login", {
+      const loginRes = await fetch("https://krishimitram-server.onrender.com/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -117,7 +117,7 @@ export default function AuthPage() {
         console.error("Login failed:", errorData);
         return;
       }
-      const meRes = await fetch("/api/auth/me", {
+      const meRes = await fetch("https://krishimitram-server.onrender.com/api/auth/me", {
         method: "GET",
         credentials: "include",
       });
@@ -143,6 +143,9 @@ export default function AuthPage() {
     }
   };
 
+  
+
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -153,7 +156,7 @@ export default function AuthPage() {
         ...formData
       };
 
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch("https://krishimitram-server.onrender.com/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

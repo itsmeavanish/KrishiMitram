@@ -30,6 +30,13 @@ app.use('/api', marketRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/api/qna", qnaRoutes);
 app.use("/api/users", userRoutes);
+app.get("/api/auth/me", (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ msg: "Not authenticated" });
+  }
+  res.json({ token });
+});
 
 // // Serve frontend in production
 // if (process.env.NODE_ENV === 'production') {

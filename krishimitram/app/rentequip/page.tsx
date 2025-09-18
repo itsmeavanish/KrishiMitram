@@ -58,7 +58,7 @@ const SearchRentEquipPage: React.FC = () => {
         try {
             const body = { search, type, geolocation }
 
-            const res = await fetch("http://localhost:5000/api/rentequipment/search", {
+            const res = await fetch("https://krishimitram-server.onrender.com/api/rentequipment/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),

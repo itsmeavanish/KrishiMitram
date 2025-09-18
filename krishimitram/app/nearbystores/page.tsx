@@ -84,7 +84,7 @@ const StorePage: React.FC = () => {
                 geolocation: userLocation,
             });
 
-            const response = await fetch("http://localhost:5000/api/stores/search", {
+            const response = await fetch("https://krishimitram-server.onrender.com/api/stores/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
