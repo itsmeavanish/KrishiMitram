@@ -475,7 +475,7 @@ const CommunityPage = () => {
 
                                     {/* Add Answer */}
                                     <div className="mt-3">
-                                      {(user?.user?._id !== post.authorId._id) &&
+                                      {(user?.user?._id !== post?.authorId?._id) &&
                                         !(post.type === "farmer-shopowner" && user?.user?.role === "farmer") && (
                                           <div>
                                             <Textarea

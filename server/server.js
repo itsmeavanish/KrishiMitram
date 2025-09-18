@@ -1,14 +1,15 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./config/db');
 const cookieParser = require("cookie-parser");
+const path = require("path");
+const connectDB = require('./config/db');
 
-// Import all marketplace routes from one file
+// Import all routes
 const marketRoutes = require('./routes/marketRoutes');
 const authRoutes = require("./routes/authRoutes");
-// const qnaRoutes=require('./routes/qnaRoutes');
-// const userRoutes=require('./routes/userRoutes');
+const qnaRoutes = require('./routes/qnaRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 dotenv.config();
 const app = express();
@@ -16,7 +17,7 @@ const app = express();
 // Middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:3000', // Adjust as needed
+  origin: 'http://localhost:3000', // Change this in production if needed
   credentials: true,
 }));
 app.use(express.json());
@@ -24,13 +25,25 @@ app.use(express.json());
 // Connect Database
 connectDB();
 
+// API routes
 app.use('/api', marketRoutes);
 app.use('/api/auth', authRoutes);
-// app.use("/api/qna", qnaRoutes);
-// app.use("/api/users",userRoutes);
+app.use("/api/qna", qnaRoutes);
+app.use("/api/users", userRoutes);
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../krishimitram/.next'); // Path to frontend build
+  app.use(express.static(frontendPath));
+
+  // All other requests send index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
 
 // Health check
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
   res.send('Server is running...');
 });
 

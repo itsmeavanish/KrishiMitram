@@ -90,8 +90,8 @@ export default function UserMap() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    setLat(pos.coords.latitude);
-                    setLng(pos.coords.longitude);
+                    setLat(pos?.coords.latitude);
+                    setLng(pos?.coords.longitude);
                 },
                 (err) => {
                     console.error("Geolocation error:", err);
@@ -100,7 +100,7 @@ export default function UserMap() {
             );
 
         }
-    }, []);
+    },[]);
 
     // Fetch users
     useEffect(() => {
@@ -163,7 +163,7 @@ export default function UserMap() {
                         u._id !== user?.user?._id // exclude yourself
                 )
                 .map((u) => {
-                    let icon;
+                    let icon=farmerIcon;
                     switch (u.role.toLowerCase()) {
                         case "farmer":
                             icon = farmerIcon;
@@ -178,7 +178,7 @@ export default function UserMap() {
                             icon = storeOwnerIcon;
                             break;
                         default:
-                            icon = farmerIcon;
+                            icon = centerIcon;
                     }
                     return (
                         <Marker
