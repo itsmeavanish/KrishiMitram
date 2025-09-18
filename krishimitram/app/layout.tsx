@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Suspense } from "react"
 import { AuthProvider } from "@/app/context/AuthContext"  // ✅ added
 import "./globals.css"
+import 'leaflet/dist/leaflet.css';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],

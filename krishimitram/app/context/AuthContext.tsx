@@ -11,11 +11,13 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
+  setUser: (user: User | null) => void; // ✅ include setUser
   loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  setUser: () => {}, // default empty function
   loading: true,
 });
 
@@ -35,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const data = await res.json();
           const decoded: User = jwtDecode(data.token);
           setUser(decoded);
+          console.log("Decoded user:", decoded);
         } else {
           setUser(null);
         }
@@ -50,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, setUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

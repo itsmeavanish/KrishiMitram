@@ -10,6 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Eye, EyeOff, Leaf, Phone, Mail, User, MapPin } from "lucide-react"
 import Dropdown from "@/components/ui/dropdown"
+import { useAuth } from "@/app/context/AuthContext";
+import { jwtDecode } from "jwt-decode"
+
+
 
 // ✅ Define roles as tuple
 const roles = ["farmer", "buyer", "storeowner", "officer"] as const
@@ -63,72 +67,98 @@ const roleFields: Record<Role, Field[]> = {
 }
 
 export default function AuthPage() {
-const [showPassword, setShowPassword] = useState(false);
-const [isLoading, setIsLoading] = useState(false);
-const [role, setRole] = useState<Role>("farmer");
-const [formData, setFormData] = useState<FormData>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState<Role>("farmer");
+  const [formData, setFormData] = useState<FormData>({});
+  const { user, loading } = useAuth();
 
 
-useEffect(() => {
-  if (role !== "officer" && navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setFormData((prev) => ({
-          ...prev,
-          geolocation: {
-            lat: latitude,
-            lng: longitude,
-          },
-        }));
-      },
-      (err) => {
-        console.error("Geolocation error:", err);
-      }
-    );
-  }
-}, [role]);
+  useEffect(() => {
+    if (role !== "officer" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setFormData((prev) => ({
+            ...prev,
+            geolocation: {
+              lat: latitude,
+              lng: longitude,
+            },
+          }));
+        },
+        (err) => {
+          console.error("Geolocation error:", err);
+        }
+      );
+    }
+  }, [role]);
 
+
+  const { setUser } = useAuth(); // make sure setUser is exposed in context
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
       console.log({ role, formData });
-      
-      const payload = {
-    ...formData
-  };
 
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    credentials: "include"
-  });
-      window.location.href = "/dashboard"
-      const data = await response.json()
-      console.log(data);
+      const payload = { ...formData };
+
+      // 1️⃣ Call login API
+      const loginRes = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        credentials: "include", // cookie will be set
+      });
+
+      if (!loginRes.ok) {
+        const errorData = await loginRes.json();
+        console.error("Login failed:", errorData);
+        return;
+      }
+      const meRes = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!meRes.ok) {
+        console.error("Failed to fetch user info");
+        return;
+      }
+
+      const meData = await meRes.json();
+
+      const decoded: any = jwtDecode(meData.token);
+      setUser(decoded);
+
+      if (decoded?.user.role === "farmer") {
+        window.location.href = "/dashboard";
+      } else {
+        window.location.href = "/dashboardofficer";
+      }
+
     } catch (error) {
-      console.log(error)
+      console.log("Login error:", error);
     }
-  }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       console.log({ role, formData });
-      
+
       const payload = {
-    role,
-    ...formData
-  };
+        role,
+        ...formData
+      };
 
       const response = await fetch("http://localhost:5000/api/auth/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-      window.location.href = "/dashboard"
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      window.location.href = "/"
       console.log(response)
     } catch (error) {
       console.log(error)
@@ -136,7 +166,7 @@ useEffect(() => {
   }
 
 
-const handleChange = (e) => {
+  const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -249,9 +279,8 @@ const handleChange = (e) => {
                           placeholder={`Enter your ${field.label.toLowerCase()}`}
                           name={field.name}
                           onChange={handleChange}
-                          className={`h-12 border-slate-200 focus:border-emerald-500 ${
-                            ["name", "email", "phone", "address"].includes(field.name) ? "pl-10" : ""
-                          }`}
+                          className={`h-12 border-slate-200 focus:border-emerald-500 ${["name", "email", "phone", "address"].includes(field.name) ? "pl-10" : ""
+                            }`}
                           required={field.required || false}
                         />
                       </div>

@@ -21,6 +21,7 @@ const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const { theme, setTheme } = useTheme()
   const pathname = usePathname()
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,10 +31,13 @@ const Navigation = () => {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // Determine the correct dashboard link based on the user's role
+  const dashboardHref = user?.user?.role === "farmer" ? "/dashboard" : "/dashboardofficer";
+
   const navItems = [
     {
       title: "Dashboard",
-      href: "/dashboard",
+      href: dashboardHref,
       description: "View your farming activities and analytics",
       icon: BarChart3,
     },
@@ -63,12 +67,7 @@ const Navigation = () => {
       description: "Connect with fellow farmers",
     },
   ]
-
-  const { user, loading } = useAuth();
-  console.log("user from nav", user);
   
-  
-
   return (
     <motion.header
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
@@ -139,12 +138,12 @@ const Navigation = () => {
             </Link>
 
             {
-              !user&& <Link href="/auth/login">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6">Login</Button>
-            </Link>
+              !user && <Link href="/auth/login">
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-6">Login</Button>
+              </Link>
             }
             {
-              user&& <LogoutButton/>
+              user && <LogoutButton />
             }
           </div>
 

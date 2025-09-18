@@ -38,6 +38,7 @@ import {
   MessageSquareMore,
 } from "lucide-react"
 import Link from "next/link"
+import UserMap from "@/components/UserMap"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -381,7 +382,8 @@ const MarketplacePage = () => {
         </div>
       </section>
 
-
+   {/* Map */}
+   <UserMap/>
 
 
 
