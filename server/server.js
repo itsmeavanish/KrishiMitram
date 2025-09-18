@@ -17,7 +17,7 @@ const app = express();
 // Middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: '*', // Change this in production if needed
+  origin: "http://localhost:3000", // Change this in production if needed
   credentials: true,
 }));
 app.use(express.json());
