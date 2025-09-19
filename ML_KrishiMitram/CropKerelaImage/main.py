@@ -16,7 +16,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # --- Load models at startup ---
 MODELS = load_models("models/model_config.json")
 
