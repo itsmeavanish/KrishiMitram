@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import numpy as np
 
@@ -7,7 +8,16 @@ from utils import load_models, preprocess_image_bytes, choose_model_key_from_cro
 
 app = FastAPI(title="Crop Disease Prediction API")
 
-# load models at startup (models will be auto-downloaded from S3 if missing)
+# --- CORS Middleware ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Replace with frontend URL in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Load models at startup ---
 MODELS = load_models("models/model_config.json")
 
 @app.get("/")
@@ -59,5 +69,4 @@ def upload_form():
     """
 
 if __name__ == "__main__":
-    # 0.0.0.0 makes it work inside Docker
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
