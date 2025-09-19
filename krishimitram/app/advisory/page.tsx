@@ -85,6 +85,7 @@ const [isPredicting, setIsPredicting] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null)
   const advisoriesRef = useRef<HTMLDivElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
+const [cropName, setCropName] = useState("");
 
   useEffect(() => {
   chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -249,13 +250,14 @@ const handleSendMessage = async () => {
       // --- Step 1: Get recommendation from :8000 ---
       const [_, crop, , district] = userMessage.content.split(" ")
       const res = await fetch(
-        `http://127.0.0.1:8000/recommend?district=${district}&crop=${crop}`,
+        `https://recommendationapis.onrender.com/recommend?district=${district}&crop=${crop}`,
       )
       const data = await res.json()
+      console.log("Backend Data:", data)
       const backendText = `Recommendation for ${data.crop} in ${data.district}: ${data.recommendation}`
 
       // --- Step 2: Improve with chatbot on :8001 ---
-      const aiRes = await fetch("http://127.0.0.1:8001/api/chat", {
+      const aiRes = await fetch("https://chatbot-j7e1.onrender.com/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: backendText }),
@@ -267,13 +269,13 @@ const handleSendMessage = async () => {
       // --- Step 1: Get best crop from :8000 ---
       const district = userMessage.content.split("in")[1].trim()
       const res = await fetch(
-        `http://127.0.0.1:8000/best_crop?district=${district}`,
+        `https://recommendationapis.onrender.com/best_crop?district=${district}`,
       )
       const data = await res.json()
       const backendText = `Best crop for ${data.district}: ${data.best_crop}`
 
       // --- Step 2: Improve with chatbot on :8001 ---
-      const aiRes = await fetch("http://127.0.0.1:8001/api/chat", {
+      const aiRes = await fetch("https://chatbot-j7e1.onrender.com/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: backendText }),
@@ -283,7 +285,7 @@ const handleSendMessage = async () => {
 
     } else {
       // --- Directly send user query to chatbot on :8001 ---
-      const aiRes = await fetch("http://localhost:8001/api/chat", {
+      const aiRes = await fetch("https://chatbot-j7e1.onrender.com/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage.content }),
@@ -386,15 +388,16 @@ const handleSendMessage = async () => {
   if (!diseaseFile) return;
   setIsPredicting(true);
   const formData = new FormData();
-  formData.append("crop", "rice"); // you can make this dynamic with a Select later
   formData.append("file", diseaseFile);
+formData.append("crop", cropName);
 
   try {
-    const res = await fetch("http://127.0.0.1:8002/predict", {
+    const res = await fetch(" http://98.84.168.149:8000/predict", {
       method: "POST",
       body: formData,
     });
     const data = await res.json();
+    console.log("Disease Prediction Result:", data);
     setDiseaseResult(data);
   } catch (err) {
     console.error("Error predicting disease:", err);
@@ -631,22 +634,47 @@ const handleSendMessage = async () => {
 
 <TabsContent value="disease-detector" className="space-y-6">
   <div className="max-w-lg mx-auto space-y-4">
-    <h2 className="text-2xl font-bold text-foreground text-center">Crop Disease Detector</h2>
+    <h2 className="text-2xl font-bold text-foreground text-center">
+      Crop Disease Detector
+    </h2>
 
+    {/* Crop name input */}
+    <Input
+      type="text"
+      placeholder="Enter crop name (e.g. rice, banana)"
+      value={cropName}
+      onChange={(e) => setCropName(e.target.value)}
+    />
+
+    {/* File input for image */}
     <Input
       type="file"
       accept="image/*"
       onChange={(e) => setDiseaseFile(e.target.files?.[0] || null)}
     />
 
+    {/* Image preview */}
+    {diseaseFile && (
+      <div className="mt-4">
+        <p className="text-sm text-muted-foreground mb-2">Preview:</p>
+        <img
+          src={URL.createObjectURL(diseaseFile)}
+          alt="Uploaded crop"
+          className="w-full h-64 object-cover rounded-lg border"
+        />
+      </div>
+    )}
+
+    {/* Predict button */}
     <Button
       onClick={handleDiseasePrediction}
-      disabled={!diseaseFile || isPredicting}
+      disabled={!diseaseFile || !cropName || isPredicting}
       className="w-full bg-primary hover:bg-primary/90"
     >
       {isPredicting ? "Predicting..." : "Predict Disease"}
     </Button>
 
+    {/* Prediction results */}
     {diseaseResult && (
       <Card className="p-4 border border-border/50">
         {diseaseResult.error ? (
@@ -663,6 +691,8 @@ const handleSendMessage = async () => {
     )}
   </div>
 </TabsContent>
+
+
 
             {/* Advisories Tab */}
             <TabsContent value="advisories" className="space-y-6">
