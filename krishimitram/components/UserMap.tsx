@@ -86,21 +86,26 @@ export default function UserMap() {
     const [lng, setLng] = useState<number | null>(null);
 
     // Get current location
-    useEffect(() => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    setLat(pos?.coords.latitude);
-                    setLng(pos?.coords.longitude);
-                },
-                (err) => {
-                    console.error("Geolocation error:", err);
-                },
-                { enableHighAccuracy: true }
-            );
+   useEffect(() => {
+    if (navigator.geolocation) {
+        const watcher = navigator.geolocation.watchPosition(
+            (pos) => {
+                setLat(pos.coords.latitude);
+                setLng(pos.coords.longitude);
+            },
+            (err) => {
+                console.error("Geolocation error:", err);
+                // fallback: set default location (optional)
+                setLat(10.0);
+                setLng(76.0);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
 
-        }
-    },[]);
+        return () => navigator.geolocation.clearWatch(watcher);
+    }
+}, []);
+
 
     // Fetch users
     useEffect(() => {
