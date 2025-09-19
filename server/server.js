@@ -10,6 +10,7 @@ const marketRoutes = require('./routes/marketRoutes');
 const authRoutes = require("./routes/authRoutes");
 const qnaRoutes = require('./routes/qnaRoutes');
 const userRoutes = require('./routes/userRoutes');
+const escalateQueryRoute = require('./routes/escalateQueryroutes');
 
 dotenv.config();
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api', marketRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/api/qna", qnaRoutes);
 app.use("/api/users", userRoutes);
+app.use("/query", escalateQueryRoute);
 app.get("/api/auth/me", (req, res) => {
   const token = req.cookies.token;
   if (!token) {
