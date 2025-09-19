@@ -32,6 +32,7 @@ import {
   Sprout,
   CheckCircle,
 } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -86,7 +87,7 @@ const [isPredicting, setIsPredicting] = useState(false);
   const advisoriesRef = useRef<HTMLDivElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
 const [cropName, setCropName] = useState("");
-
+const {user}=useAuth();
   useEffect(() => {
   chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
 }, [chatMessages])
@@ -407,6 +408,27 @@ formData.append("crop", cropName);
   }
 };
 
+const handleEscalate = async (message: ChatMessage) => {
+  console.log(user);
+  try {
+    const res = await fetch("https://krishimitram-server.onrender.com/query/createquery", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+       
+        userId: user?.user?._id,
+        geolocation: user?.user?.geolocation || "Unknown",
+        query: message.content,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to escalate");
+    alert("✅ Query escalated successfully!");
+  } catch (err) {
+    console.error("Escalate error:", err);
+    alert("⚠️ Failed to escalate query. Try again.");
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card/20 to-secondary/10">
       <Navigation />
@@ -499,6 +521,19 @@ formData.append("crop", cropName);
         <p className="text-xs opacity-70 mt-1">
           {message.timestamp.toLocaleTimeString()}
         </p>
+        {message.type === "ai" && (
+  <div className="flex justify-start mt-1">
+    <Button
+      variant="outline"
+      size="xs"
+      className="text-xs"
+      onClick={() => handleEscalate(message)}
+    >
+      Escalate
+    </Button>
+  </div>
+)}
+
       </div>
     </div>
   ))}
