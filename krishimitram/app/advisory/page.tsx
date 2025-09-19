@@ -393,7 +393,7 @@ const handleSendMessage = async () => {
 formData.append("crop", cropName);
 
   try {
-    const res = await fetch("http://184.72.123.71:8000/predict", {
+    const res = await fetch("https://krishi-mitram.vercel.app/api/predict", {
       method: "POST",
       body: formData,
     });
