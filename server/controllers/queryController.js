@@ -64,8 +64,6 @@ const answerQuery = async (req, res) => {
   }
 };
 
-const Query = require("../models/Query");
-
 // GET all queries of a farmer by userId
 const getQueriesByFarmer = async (req, res) => {
   try {
