@@ -36,6 +36,7 @@ import {
   Share2,
   Activity,
   MessageSquareMore,
+  Landmark,
 } from "lucide-react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
@@ -301,25 +302,25 @@ const MarketplacePage = () => {
 
       <section className="pb-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {/** Each card wrapper */}
             <motion.div
               whileHover={{ scale: 1.02, y: -4 }}
               className="h-full"
             >
               <Link href="/nearbystores" className="h-full">
-              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
-                <CardHeader className="pb-3 flex flex-col items-center justify-center">
-                  <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
-                    <ShoppingCart className="h-10 w-10 mb-2" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
-                  <div className="text-2xl font-semibold">
-                    Nearby Stores
-                  </div>
-                </CardContent>
-              </Card>
+                <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                  <CardHeader className="pb-3 flex flex-col items-center justify-center">
+                    <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
+                      <ShoppingCart className="h-10 w-10 mb-2" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
+                    <div className="text-2xl font-semibold">
+                      Nearby Stores
+                    </div>
+                  </CardContent>
+                </Card>
               </Link>
             </motion.div>
 
@@ -328,18 +329,18 @@ const MarketplacePage = () => {
               className="h-full"
             >
               <Link href="/rentequip" className="h-full">
-              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
-                <CardHeader className="pb-3 flex flex-col items-center justify-center">
-                  <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
-                    <Tractor className="h-10 w-10 mb-2" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
-                  <div className="text-2xl font-semibold">
-                    Rent Equipments
-                  </div>
-                </CardContent>
-              </Card>
+                <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                  <CardHeader className="pb-3 flex flex-col items-center justify-center">
+                    <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
+                      <Tractor className="h-10 w-10 mb-2" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
+                    <div className="text-2xl font-semibold">
+                      Rent Equipments
+                    </div>
+                  </CardContent>
+                </Card>
               </Link>
             </motion.div>
 
@@ -348,18 +349,18 @@ const MarketplacePage = () => {
               className="h-full"
             >
               <Link href="/sellcrops" className="h-full">
-              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
-                <CardHeader className="pb-3 flex flex-col items-center justify-center">
-                  <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
-                    <Wheat className="h-10 w-10 mb-2" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
-                  <div className="text-2xl font-semibold">
-                    Sell crops
-                  </div>
-                </CardContent>
-              </Card>
+                <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                  <CardHeader className="pb-3 flex flex-col items-center justify-center">
+                    <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
+                      <Wheat className="h-10 w-10 mb-2" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
+                    <div className="text-2xl font-semibold">
+                      Sell crops
+                    </div>
+                  </CardContent>
+                </Card>
               </Link>
             </motion.div>
 
@@ -380,13 +381,30 @@ const MarketplacePage = () => {
                 </CardContent>
               </Card>
             </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02, y: -4 }}
+              className="h-full"
+            >
+              <Card className="h-full border-border/50 hover:border-primary/30 transition-all duration-300 flex flex-col items-center justify-center text-center">
+                <CardHeader className="pb-3 flex flex-col items-center justify-center">
+                  <CardTitle className="text-2xl font-medium text-muted-foreground flex flex-col items-center">
+                    <Landmark className="h-10 w-10 mb-2" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-semibold">
+                    Nearby Mandi Demand
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
 
         </div>
       </section>
 
-   {/* Map */}
-   <UserMap/>
+      {/* Map */}
+      <UserMap />
 
 
 
