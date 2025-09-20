@@ -385,21 +385,39 @@ const handleSendMessage = async () => {
     return matchesCategory && matchesCrop
   })
 
-  const handleDiseasePrediction = async () => {
+const handleDiseasePrediction = async () => {
   if (!diseaseFile) return;
   setIsPredicting(true);
+
   const formData = new FormData();
   formData.append("file", diseaseFile);
-formData.append("crop", cropName);
+  formData.append("crop", cropName);
 
   try {
     const res = await fetch("https://krishi-mitram.vercel.app/api/predict", {
       method: "POST",
       body: formData,
     });
-    const data = await res.json();
+
+    let data;
+
+    if (!res.ok) {
+      // if server returns an error (502, 500, etc.)
+      const text = await res.text();
+      data = { error: `Server error (${res.status}): ${text}` };
+    } else {
+      try {
+        // try to parse JSON safely
+        data = await res.json();
+      } catch {
+        const text = await res.text();
+        data = { error: `Invalid JSON response: ${text}` };
+      }
+    }
+
     console.log("Disease Prediction Result:", data);
     setDiseaseResult(data);
+
   } catch (err) {
     console.error("Error predicting disease:", err);
     setDiseaseResult({ error: "Failed to predict disease." });
